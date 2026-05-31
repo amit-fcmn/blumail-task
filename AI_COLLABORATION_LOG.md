@@ -6,27 +6,16 @@
 - **Plan + grill-with-docs session** — architecture decisions before coding
 
 ## Example prompts relied on
+To be honest, i just took the pdf with assignment description and gave it tp cursor with the skill "grill-with-docs". this skill is created by a guy named Matt and can be found here: https://www.aihero.dev/grill-with-docs
+This skill is excellent and for a lot of tasks, including this one, is enough to one shot the solution. there few others we can use like TDD and improve architecture but they werent so much needed for this task.
 
-1. *"Implement the Feedback Insights Backend plan: NestJS, Prisma, hash dedup, in-process queue, OpenRouter with Zod validation, dual retry policy."*
+few other prompts i used is when i reviewed the code i asked to change some parmaters to be class property and break some functions to be smaller.
 
-2. *"Grill the design: choose stack, guardrail, retry semantics, dedup API contract, and OpenRouter model enum for cheap models (Gemini, Kimi, DeepSeek)."*
-
-3. *"Use Prisma 7 with Postgres adapter; validate env at startup; expose POST/GET feedback and POST retry with offset pagination."*
-
-## Correction example
-
-**Issue:** Initial Prisma 7 setup used `datasourceUrl` in `PrismaClient` constructor (Prisma 6 style). Build failed: property does not exist.
-
-**AI output:** Assumed classic Prisma client initialization.
-
-**Correction:** Read generated `client.ts` docs — Prisma 7 requires `@prisma/adapter-pg` with a `pg` `Pool`. Updated `PrismaService` to pass `{ adapter: new PrismaPg(pool) }`.
-
-**Constraint added:** Always run `npm run build` after schema/client changes before marking scaffold complete.
 
 ## What I would improve with more time
 
-- **Outbox pattern** or durable queue (BullMQ + Redis) so analysis jobs survive process restarts
+- **Outbox pattern** use  SQS for actual event driven approach that will scale and persist.
 - **Integration tests** with mocked OpenRouter and a test Postgres container
-- **Model capability probe** at startup to select `json_schema` vs `json_object` fallback per model
 - **Observability**: structured logging, metrics for queue depth and analysis latency
 - **OpenAPI** document generated from Nest decorators for reviewers
+- **Budget** Add budget control on api request and limit users that will abuse the system
