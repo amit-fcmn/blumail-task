@@ -1,0 +1,51 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum FeedbackStatus {
+  RECEIVED
+  ANALYZING
+  DONE
+  FAILED
+}
+
+model Feedback {
+  id               String         @id @default(cuid())
+  content          String
+  contentHash      String         @unique @map("content_hash")
+  status           FeedbackStatus @default(RECEIVED)
+  attemptCount     Int            @default(0) @map("attempt_count")
+  latestAnalysisId String?        @unique @map("latest_analysis_id")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  analyses       Analysis[] @relation("FeedbackAnalyses")
+  latestAnalysis Analysis?  @relation("LatestAnalysis", fields: [latestAnalysisId], references: [id])
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("feedback")
+}
+
+model Analysis {
+  id               String   @id @default(cuid())
+  feedbackId       String   @map("feedback_id")
+  attemptNumber    Int      @map("attempt_number")
+  rawAiResponse    String?  @map("raw_ai_response")
+  structuredResult Json?    @map("structured_result")
+  errorMessage     String?  @map("error_message")
+  modelUsed        String   @map("model_used")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  feedback          Feedback  @relation("FeedbackAnalyses", fields: [feedbackId], references: [id], onDelete: Cascade)
+  latestForFeedback Feedback? @relation("LatestAnalysis")
+
+  @@index([feedbackId, createdAt(sort: Desc)])
+  @@map("analysis")
+}
